@@ -1,0 +1,64 @@
+###
+###
+# Ansible Setup Clients
+#
+# Changelogs:
+# - v1: 23/05/2021 - initial release
+# - v2: 29/08/2021 - removed uid
+###
+###
+---
+- name: Ansible Setup Clients
+  hosts: all
+  become: yes
+  become_user: root
+  vars:
+    remote_ansible_user: "ansibleadm"
+    ssh_pri_key: "/root/.ssh/id_rsa"
+    ssh_pub_key: "/root/.ssh/id_rsa.pub"
+    ssh_port: 22
+
+
+  tasks:
+  - name: Create Ansible Remote User {{ remote_ansible_user }} for Ubuntu or Debian
+    user:
+      name: "{{ remote_ansible_user }}"
+      comment: "Ansible Automation"
+      group: sudo
+      password: '*'
+      expires: -1
+      home: /home/{{ remote_ansible_user }}
+      state: present
+    when: ansible_distribution=="Ubuntu" or ansible_distribution=="Debian"
+
+  - name: Create Ansible Remote User {{ remote_ansible_user }} for CentOS or Red Hat
+    user:
+      name: "{{ remote_ansible_user }}"
+      comment: "Ansible Automation"
+      group: wheel
+      password: '*'
+      expires: -1
+      home: /home/{{ remote_ansible_user }}
+      state: present
+    when: ansible_distribution=="CentOS" or ansible_distribution=="RedHat"
+
+  - name: Set sudo for {{ remote_ansible_user }}
+    copy:
+      dest: /etc/sudoers.d/{{ remote_ansible_user }}
+      content: '{{ remote_ansible_user }} ALL=(ALL) NOPASSWD: ALL'
+      owner: root
+      group: root
+      mode: '0440'
+      validate: /sbin/visudo -csf %s
+
+  - name: Set authorized key for {{ remote_ansible_user }}
+    authorized_key:
+      user: "{{ remote_ansible_user }}"
+      state: present
+      key: "{{ lookup('file', '{{ ssh_pub_key }}') }}"
+
+  - name: Test SSH Public Key authentication for {{ remote_ansible_user }}
+    shell: ssh -i {{ ssh_pri_key }} -p {{ ssh_port }} {{ remote_ansible_user }}@{{ ansible_default_ipv4.address|default(ansible_all_ipv4_addresses[0]) }}
+    args:
+      executable: /bin/bash
+    delegate_to: localhost

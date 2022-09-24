@@ -1,0 +1,46 @@
+###
+###
+# Add Yum Repo
+#
+# Changelogs:
+# - v1.0: 23/05/2021 - initial release
+# - v1.1: 28/05/2021 - added yum-utils installation
+# - v1.2: 25/09/2022 - added checks for Rocky Linux
+###
+###
+---
+- name: Add Yum Repo
+  hosts: all
+  become: yes
+  become_user: root
+  vars:
+    disable_all_existing_repos: false       # Options: [true, false]
+    repo_name: my-rhel-repo                 # No whitespace allowed
+    repo_url: <url / file>                  # Repo URL or File
+    repo_gpgcheck: no                       # GPG Check
+
+
+  tasks:
+    - name: Add Yum Repo
+      block:
+      - name: Install yum-utils 
+        yum:
+          name: yum-utils
+          state: latest
+        when: disable_all_existing_repos | bool
+
+      - name: Disable all existing repos
+        shell: yum-config-manager --disable '*'
+        args:
+          executable: /bin/bash
+        when: disable_all_existing_repos | bool
+
+      - name: Add Yum Repo
+        yum_repository:
+          name: "{{ repo_name }}"
+          description: "{{ repo_name }}"
+          baseurl: "{{ repo_url }}"
+          gpgcheck: "{{ repo_gpgcheck }}"
+          enabled: yes
+
+      when: ansible_distribution=="CentOS" or ansible_distribution=="RedHat" or ansible_distribution=="Rocky"
