@@ -15,4 +15,5 @@ In `/etc/ansible/ansible.cfg`, under `[defaults]`, add: `interpreter_python=/usr
 | 1 | add-yum-repo.yml  | To add a new Yum Repo for CentOS, Red Hat and Rocky Linux.<br>It has the option to disable all existing repos in `/etc/yum.repos.d`.  |
 | 2 | ansible-setup-clients.yml  | To setup individual Ansible client so that the Ansible master can communicate with this client.<br>It will create a non-root privilleged user for running Ansible tasks and also plant the ssh public key from the Ansible Master.  |
 | 3 | detect-family-distribution.yml  | To detect OS Family, Distribution Release & version and Architecture.  |
+| 4 | vault_lookup.yaml  | To lookup key-value pairs from HashiCorp Vault.  |
   
