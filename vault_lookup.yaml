@@ -1,0 +1,52 @@
+---
+- name: HashiCorp Vault test
+  hosts: localhost
+  gather_facts: false
+  vars:
+    vault_url: <Vault URL>
+    secret_path: <Secret Path>
+    secret_name: <Secret Name>
+    role_id: <Role ID>
+    secret_id: <Secret ID>
+    key_filter: <Key>
+ 
+  tasks:
+    ##########
+    # https://docs.ansible.com/ansible/latest//collections/community/hashi_vault/vault_read_lookup.html
+    - name: Get all key-value pairs from a secret engine
+      community.hashi_vault.vault_read:
+        url: "{{ vault_url }}"
+        auth_method: approle
+        role_id: "{{ role_id }}"
+        secret_id: "{{ secret_id }}"
+        path: /{{ secret_path }}/data/{{ secret_name }}
+        validate_certs: false
+      register: secret_data
+
+    - name: List all key-value pairs
+      ansible.builtin.debug:
+        msg: "{{ secret_data }}"
+
+
+
+    ##########
+    # https://docs.ansible.com/ansible/latest/collections/community/hashi_vault/hashi_vault_lookup.html
+
+    - name: Get all key-value pairs
+      ansible.builtin.set_fact:
+        all_secrets: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=/{{ secret_path }}/data/{{ secret_name }} auth_method=approle role_id={{ role_id }} secret_id={{ secret_id }} url={{ vault_url }}') }}"
+
+    - name: List all key-value pairs
+      ansible.builtin.debug:
+        msg: "Secret '{{ item.key }}' has value '{{ item.value }}'"
+      loop: "{{ all_secrets | dict2items }}"
+
+
+
+    - name: Get key-value pair from key {{ key_filter }}
+      ansible.builtin.set_fact:
+        my_secret: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=/{{ secret_path }}/data/{{ secret_name }}:{{ key_filter }} auth_method=approle role_id={{ role_id }} secret_id={{ secret_id }} url={{ vault_url }}') }}"
+
+    - name: List value from key {{ key_filter }}
+      ansible.builtin.debug:
+        msg: "{{ my_secret }}"
