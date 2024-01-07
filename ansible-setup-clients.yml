@@ -7,13 +7,14 @@
 # - v2: 29/08/2021 - removed uid
 ###
 ###
+# Usage: ansible-playbook ansible-setup-clients.yml --extra-vars "host=<ip address> remote_ansible_user=<ansible user>" [-i <path to ansible host file>] -u <existing remote user> -k -K
 ---
 - name: Ansible Setup Clients
   hosts: all
   become: yes
   become_user: root
   vars:
-    remote_ansible_user: "ansibleadm"
+    remote_ansible_user: "ansibleusr"
     ssh_pri_key: "/root/.ssh/id_rsa"
     ssh_pub_key: "/root/.ssh/id_rsa.pub"
     ssh_port: 22
